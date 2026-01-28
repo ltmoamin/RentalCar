@@ -49,7 +49,11 @@ pipeline {
                     dir('backend') {
                         sh '''
                             echo "Building backend with Maven..."
-                            ./mvnw clean package ${SKIP_TESTS ? '-DskipTests' : ''}
+                            if [ "$SKIP_TESTS" = "true" ]; then
+                                ./mvnw clean package -DskipTests
+                            else
+                                ./mvnw clean package
+                            fi
                         '''
                     }
                 }
@@ -152,21 +156,8 @@ pipeline {
                         # Copy environment file
                         cp .env.example .env.${ENVIRONMENT}
                         
-                        # Update image tags in compose file for Docker Hub
-                        sed -i "s|build:.*|image: ${BACKEND_IMAGE}:${ENVIRONMENT}-latest|g" docker-compose.yml || sed -i "s|build:|image: ${BACKEND_IMAGE}:${ENVIRONMENT}-latest|g" docker-compose.yml
-                        
-                        # Or use proper YAML-aware replacement
-                        cat > docker-compose.override.yml << EOF
-version: '3.9'
-services:
-  backend:
-    image: ${BACKEND_IMAGE}:${ENVIRONMENT}-latest
-  frontend:
-    image: ${FRONTEND_IMAGE}:${ENVIRONMENT}-latest
-EOF
-                        
                         # Stop existing containers
-                        docker-compose down || true
+                        docker-compose -f ${DOCKER_COMPOSE_FILE} down || true
                         
                         # Login to Docker Hub
                         echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin || true
@@ -175,17 +166,17 @@ EOF
                         docker pull ${BACKEND_IMAGE}:${ENVIRONMENT}-latest || true
                         docker pull ${FRONTEND_IMAGE}:${ENVIRONMENT}-latest || true
                         
-                        # Start services
-                        docker-compose -f ${DOCKER_COMPOSE_FILE} -f docker-compose.override.yml --env-file .env.${ENVIRONMENT} up -d
+                        # Start services with environment file
+                        docker-compose -f ${DOCKER_COMPOSE_FILE} --env-file .env.${ENVIRONMENT} up -d
                         
                         # Wait for services to be healthy
                         echo "Waiting for services to be healthy..."
                         sleep 30
                         
                         # Check service status
-                        docker-compose -f ${DOCKER_COMPOSE_FILE} -f docker-compose.override.yml ps
+                        docker-compose -f ${DOCKER_COMPOSE_FILE} ps
                         
-                        docker logout
+                        docker logout || true
                     '''
                 }
             }
@@ -220,7 +211,23 @@ EOF
             }
         }
 
-      
+        // stage('Run Integration Tests') {
+        //     when {
+        //         expression { return !params.SKIP_TESTS }
+        //     }
+        //     steps {
+        //         script {
+        //             echo "========== Running Integration Tests =========="
+        //             sh '''
+        //                 echo "Running backend API tests..."
+        //                 curl -v http://localhost:8082/api/health || true
+                        
+        //                 echo "Running frontend tests..."
+        //                 curl -v http://localhost/ || true
+        //             '''
+        //         }
+        //     }
+        // }
 
         stage('Generate Reports') {
             steps {
