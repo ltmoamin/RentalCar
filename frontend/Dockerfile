@@ -24,11 +24,7 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Copy built app from builder
 COPY --from=builder /app/dist/frontend /usr/share/nginx/html
 
-# Create non-root user
-RUN addgroup -g 101 -S nginx && \
-    adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -c "Nginx web server" -G nginx nginx
-
-# Set permissions
+# Set permissions (nginx user already exists in nginx:alpine)
 RUN chown -R nginx:nginx /usr/share/nginx/html && \
     chmod -R 755 /usr/share/nginx/html
 
