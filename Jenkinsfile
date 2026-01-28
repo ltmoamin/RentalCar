@@ -87,6 +87,7 @@ pipeline {
                     echo "========== Running SonarQube Analysis =========="
                     dir('backend') {
                         sh '''
+                            chmod +x mvnw
                             ./mvnw sonar:sonar \
                               -Dsonar.projectKey=rentalcar \
                               -Dsonar.sources=src/main/java \
@@ -252,9 +253,9 @@ pipeline {
     post {
         always {
             script {
-                echo "========== Cleaning Up =========="
-                // Clean up workspace (optional)
-                cleanWs()
+                echo "========== Build Complete =========="
+                echo "Workspace files preserved for debugging"
+                // DO NOT USE cleanWs() - we need the files for deployment!
             }
         }
 
@@ -276,7 +277,11 @@ pipeline {
                 // Rollback on failure
                 sh '''
                     echo "Deployment failed. Rolling back..."
-                    docker-compose -f ${DOCKER_COMPOSE_FILE} down || true
+                    if command -v docker-compose &> /dev/null; then
+                        docker-compose -f ${DOCKER_COMPOSE_FILE} down || true
+                    else
+                        echo "docker-compose not found, skipping rollback"
+                    fi
                 '''
             }
         }
