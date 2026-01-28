@@ -1,0 +1,12 @@
+{
+  "models": [
+    {
+      "title": "Ollama Mistral",
+      "provider": "ollama",
+      "model": "mistral"
+    }
+  ],
+  "autocomplete": {
+    "model": "mistral"
+  }
+}

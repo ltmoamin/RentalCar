@@ -1,0 +1,68 @@
+<div class="notification-center-container">
+    <div class="container">
+        <header class="page-header">
+            <div class="title-group">
+                <h1>Notification Center</h1>
+                <p>Stay updated with your car rentals, support tickets, and payments.</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-outline-primary" (click)="markAllAsRead()">
+                    <i class="fas fa-check-double"></i> Mark all as read
+                </button>
+            </div>
+        </header>
+
+        <div class="notification-tabs">
+            <button class="tab-btn" [class.active]="activeFilter === 'ALL'" (click)="setFilter('ALL')">All</button>
+            <button class="tab-btn" [class.active]="activeFilter === 'UNREAD'"
+                (click)="setFilter('UNREAD')">Unread</button>
+            <button class="tab-btn" [class.active]="activeFilter === 'PAYMENT'"
+                (click)="setFilter('PAYMENT')">Payments</button>
+            <button class="tab-btn" [class.active]="activeFilter === 'SUPPORT'"
+                (click)="setFilter('SUPPORT')">Support</button>
+            <button class="tab-btn" [class.active]="activeFilter === 'MESSAGE'"
+                (click)="setFilter('MESSAGE')">Messages</button>
+        </div>
+
+        <div class="content-area">
+            <div class="loading-state" *ngIf="loading">
+                <div class="spinner"></div>
+                <p>Loading notifications...</p>
+            </div>
+
+            <div class="notification-groups" *ngIf="!loading && groupedNotifications.length > 0">
+                <div class="notification-card" *ngFor="let n of groupedNotifications" [class.unread]="!n.read"
+                    (click)="markAsRead(n)">
+                    <div class="notification-main" [routerLink]="n.link || null">
+                        <div class="icon-indicator" [ngClass]="n.type.toLowerCase()">
+                            <i [class]="getIconClass(n.type)"></i>
+                        </div>
+                        <div class="text-content">
+                            <div class="top-row">
+                                <h3 class="title">{{ n.title }}</h3>
+                                <span class="tag" [ngClass]="n.type.toLowerCase()">{{ n.type }}</span>
+                            </div>
+                            <p class="message">{{ n.message }}</p>
+                            <span class="date">{{ n.createdAt | date:'medium' }}</span>
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="read-toggle" (click)="$event.stopPropagation(); markAsRead(n)" *ngIf="!n.read"
+                            title="Mark as read">
+                            <i class="fas fa-circle"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="empty-state" *ngIf="!loading && groupedNotifications.length === 0">
+                <div class="empty-icon">
+                    <i class="fas fa-bell-slash"></i>
+                </div>
+                <h2>Everything caught up!</h2>
+                <p>You don't have any notifications in this category at the moment.</p>
+                <button class="btn btn-primary" (click)="setFilter('ALL')">View All Notifications</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,23 @@
+<div class="success-container">
+    <div class="success-card">
+        <div class="icon-wrapper">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h1>Payment Successful!</h1>
+        <p>Thank you for your trust. Your booking is now confirmed.</p>
+
+        <div class="details" *ngIf="paymentIntentId">
+            <span class="label">Payment ID:</span>
+            <span class="value">{{ paymentIntentId }}</span>
+        </div>
+
+        <div class="actions">
+            <a routerLink="/profile/my-bookings" class="btn btn-primary">
+                <i class="fas fa-calendar-alt"></i> View My Bookings
+            </a>
+            <a routerLink="/" class="btn btn-outline">
+                <i class="fas fa-home"></i> Back to Home
+            </a>
+        </div>
+    </div>
+</div>

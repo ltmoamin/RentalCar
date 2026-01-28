@@ -1,0 +1,99 @@
+<div class="role-management-page">
+    <div class="container">
+        <div class="page-header">
+            <h1><i class="fas fa-users-cog"></i> User Management</h1>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-card card">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()"
+                    placeholder="Search users by name or email..." class="search-input">
+            </div>
+
+            <div class="filter-group">
+                <div class="filter-item">
+                    <label>Role:</label>
+                    <select [(ngModel)]="filterRole" (ngModelChange)="onRoleFilterChange()">
+                        <option value="all">All Roles</option>
+                        <option value="USER">User</option>
+                        <option value="ADMIN">Admin</option>
+                    </select>
+                </div>
+
+                <div class="filter-item">
+                    <label>Status:</label>
+                    <select [(ngModel)]="filterStatus" (ngModelChange)="onStatusFilterChange()">
+                        <option value="all">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="users-card card">
+            <div class="table-header">
+                <h2>Users ({{ filteredUsers.length }})</h2>
+            </div>
+
+            <div class="table-responsive">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let user of filteredUsers">
+                            <td>
+                                <div class="user-cell">
+                                    <div class="user-avatar">
+                                        {{ user.firstName.charAt(0) }}{{ user.lastName.charAt(0) }}
+                                    </div>
+                                    <div class="user-info">
+                                        <strong>{{ user.firstName }} {{ user.lastName }}</strong>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                <select [(ngModel)]="user.role" (ngModelChange)="updateUserRole(user, $event)"
+                                    class="role-select" [class.admin]="user.role === 'ADMIN'">
+                                    <option value="USER">User</option>
+                                    <option value="ADMIN">Admin</option>
+                                </select>
+                            </td>
+                            <td>
+                                <span class="status-badge" [class.active]="user.enabled">
+                                    {{ user.enabled ? 'Active' : 'Inactive' }}
+                                </span>
+                            </td>
+                            <td>{{ user.createdAt | date }}</td>
+                            <td>
+                                <button class="action-btn" (click)="toggleUserStatus(user)"
+                                    [title]="user.enabled ? 'Deactivate' : 'Activate'">
+                                    <i class="fas" [class.fa-ban]="user.enabled" [class.fa-check]="!user.enabled"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div *ngIf="filteredUsers.length === 0" class="empty-state">
+                    <i class="fas fa-users"></i>
+                    <p>No users found</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<app-loading-spinner *ngIf="isLoading" [overlay]="true" message="Loading users..."></app-loading-spinner>

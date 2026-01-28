@@ -1,0 +1,91 @@
+<div class="thread-container" *ngIf="ticket">
+    <div class="thread-header">
+        <div class="header-left">
+            <button class="btn-back" routerLink="/profile/support">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div class="ticket-info">
+                <div class="top-row">
+                    <span class="ticket-id">#{{ticket.id}}</span>
+                    <span class="status-badge" [ngClass]="getStatusClass(ticket.status)">{{ticket.status}}</span>
+                </div>
+                <h1>{{ticket.subject}}</h1>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="meta-badge">
+                <i class="fas fa-tag"></i> {{ticket.issueType}}
+            </div>
+            <div class="meta-badge" [ngClass]="'priority-' + ticket.priority.toLowerCase()">
+                <i class="fas fa-circle"></i> {{ticket.priority}}
+            </div>
+        </div>
+    </div>
+
+    <div class="thread-body">
+        <!-- Main Issue Card -->
+        <div class="message sender">
+            <div class="message-meta">
+                <span class="sender-name">{{ticket.user.firstName}} {{ticket.user.lastName}}</span>
+                <span class="message-time">{{ticket.createdAt | date:'medium'}}</span>
+            </div>
+            <div class="message-bubble">
+                <p>{{ticket.description}}</p>
+                <div class="attachment" *ngIf="ticket.booking">
+                    <i class="fas fa-car"></i> Linked Booking #{{ticket.booking.id}} - {{ticket.booking.carName}}
+                </div>
+            </div>
+        </div>
+
+        <!-- Communication Thread -->
+        <div *ngFor="let msg of ticket.messages" class="message"
+            [ngClass]="{'sender': msg.sender.id === currentUser?.id, 'admin': msg.sender.id !== currentUser?.id}">
+            <div class="message-meta">
+                <span class="sender-name">{{msg.sender.firstName}} {{msg.sender.lastName}}</span>
+                <span class="message-time">{{msg.createdAt | date:'short'}}</span>
+            </div>
+            <div class="message-bubble">
+                <p>{{msg.content}}</p>
+                <div class="media-preview" *ngIf="msg.mediaUrl">
+                    <img *ngIf="msg.mediaType === 'IMAGE' || isImage(msg.mediaUrl)" [src]="msg.mediaUrl"
+                        alt="attachment">
+                    <video *ngIf="msg.mediaType === 'VIDEO' || isVideo(msg.mediaUrl)" [src]="msg.mediaUrl"
+                        controls></video>
+                    <a [href]="msg.mediaUrl" target="_blank" class="download-link">
+                        <i class="fas fa-download"></i> View Full
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="thread-footer"
+        *ngIf="ticket.status !== TicketStatusEnum.CLOSED && ticket.status !== TicketStatusEnum.RESOLVED">
+        <div class="attachment-preview" *ngIf="filePreview">
+            <img [src]="filePreview" *ngIf="selectedFile?.type?.startsWith('image')">
+            <video [src]="filePreview" *ngIf="selectedFile?.type?.startsWith('video')"></video>
+            <button (click)="removeFile()"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="input-area">
+            <button class="btn-attach" (click)="fileInput.click()">
+                <i class="fas fa-paperclip"></i>
+            </button>
+            <input #fileInput type="file" hidden (change)="onFileSelected($event)">
+
+            <textarea placeholder="Type your response here..." [(ngModel)]="newMessage"
+                (keydown.enter)="$event.preventDefault(); sendMessage()"></textarea>
+
+            <button class="btn-send" [disabled]="(!newMessage.trim() && !selectedFile) || sending"
+                (click)="sendMessage()">
+                <i class="fas fa-paper-plane" *ngIf="!sending"></i>
+                <i class="fas fa-spinner fa-spin" *ngIf="sending"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="resolved-banner"
+        *ngIf="ticket.status === TicketStatusEnum.RESOLVED || ticket.status === TicketStatusEnum.CLOSED">
+        <i class="fas fa-check-circle"></i> This ticket is {{ticket.status}}. Communication is closed.
+    </div>
+</div>

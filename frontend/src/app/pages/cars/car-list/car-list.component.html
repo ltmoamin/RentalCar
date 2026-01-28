@@ -1,0 +1,100 @@
+<div class="cars-page">
+    <div class="container">
+        <div class="page-header animate-slide-up">
+            <div class="header-content">
+                <h1>Explore Our Fleet</h1>
+                <p>Premium cars for your next premium journey</p>
+            </div>
+            <div class="header-stats">
+                <div class="stat animate-scale-in">
+                    <span class="count">{{ cars.length }}</span>
+                    <span class="label">Cars Found</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="cars-layout">
+            <!-- Filters Sidebar -->
+            <aside class="filters-sidebar animate-fade-in stagger-2">
+                <div class="filter-card">
+                    <div class="filter-header">
+                        <h3><i class="fas fa-filter"></i> Filters</h3>
+                        <button class="btn-text" (click)="resetFilters()">Reset</button>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Search Brand</label>
+                        <div class="search-input">
+                            <i class="fas fa-search"></i>
+                            <input type="text" [(ngModel)]="filters.brand" (ngModelChange)="applyFilters()"
+                                placeholder="e.g. Tesla">
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Category</label>
+                        <select [(ngModel)]="filters.category" (change)="applyFilters()" class="form-select">
+                            <option value="">All Categories</option>
+                            <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Price Range (per day)</label>
+                        <div class="price-inputs">
+                            <div class="input-with-prefix">
+                                <span>$</span>
+                                <input type="number" [(ngModel)]="filters.minPrice" (ngModelChange)="applyFilters()"
+                                    placeholder="Min">
+                            </div>
+                            <div class="divider">to</div>
+                            <div class="input-with-prefix">
+                                <span>$</span>
+                                <input type="number" [(ngModel)]="filters.maxPrice" (ngModelChange)="applyFilters()"
+                                    placeholder="Max">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Availability</label>
+                        <div class="toggle-group">
+                            <label class="toggle-option">
+                                <input type="radio" [value]="undefined" [(ngModel)]="filters.available"
+                                    (change)="applyFilters()">
+                                <span>All</span>
+                            </label>
+                            <label class="toggle-option">
+                                <input type="radio" [value]="true" [(ngModel)]="filters.available"
+                                    (change)="applyFilters()">
+                                <span>Available</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Cars Grid -->
+            <main class="cars-content">
+                <div *ngIf="isLoading" class="loading-state">
+                    <app-loading-spinner message="Finding the best cars for you..."></app-loading-spinner>
+                </div>
+
+                <div *ngIf="!isLoading && cars.length === 0" class="empty-state animate-fade-in">
+                    <div class="empty-icon">
+                        <i class="fas fa-car-side"></i>
+                    </div>
+                    <h3>No cars found</h3>
+                    <p>Try adjusting your filters to find more results.</p>
+                    <button class="btn btn-outline" (click)="resetFilters()">Clear all filters</button>
+                </div>
+
+                <div *ngIf="!isLoading && cars.length > 0" class="cars-grid">
+                    <app-car-card *ngFor="let car of cars; let i = index" [car]="car" class="animate-slide-up"
+                        [class]="'stagger-' + (i % 12 + 1)">
+                    </app-car-card>
+                </div>
+            </main>
+        </div>
+    </div>
+</div>

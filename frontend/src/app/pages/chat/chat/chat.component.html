@@ -1,0 +1,308 @@
+<div class="chat-container">
+    <!-- Sidebar (Figma V10) -->
+    <aside class="chat-sidebar">
+        <div class="sidebar-header">
+            <div class="header-top">
+                <div class="app-brand">
+                    <div class="brand-icon"><i class="fa-solid fa-comment-dots"></i></div>
+                    <h2>Chat Buddies</h2>
+                </div>
+            </div>
+
+            <div class="search-section">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" [(ngModel)]="conversationSearchQuery" placeholder="Search messages, people">
+                </div>
+                <button class="add-btn" (click)="loadAvailableParticipants()"><i class="fa-solid fa-plus"></i></button>
+            </div>
+        </div>
+
+        <div class="conversations-wrapper">
+            <!-- User Selection Modal Overlay -->
+            <div class="user-selection-modal" *ngIf="showUserModal">
+                <div class="modal-header">
+                    <span>Start New Chat</span>
+                    <i class="fa-solid fa-xmark close-icon" (click)="showUserModal = false"></i>
+                </div>
+                <div class="user-list">
+                    <div *ngFor="let user of availableUsers" class="user-item" (click)="startNewChat(user)">
+                        <div class="u-avatar">
+                            <img *ngIf="user.avatar" [src]="user.avatar">
+                            <div class="initials" *ngIf="!user.avatar">{{ getInitials(user.name) }}</div>
+                        </div>
+                        <div class="u-info">
+                            <span class="u-name">{{ formatDisplayName(user.name) }}</span>
+                            <span class="u-role">{{ user.role }}</span>
+                        </div>
+                        <i class="fa-solid fa-paper-plane start-icon"></i>
+                    </div>
+                </div>
+            </div>
+            <!-- Inbox View (V30) -->
+            <div class="list-section" *ngIf="!showArchived">
+                <div class="archive-toggle-top" (click)="showArchived = true">
+                    <i class="fa-solid fa-box-archive"></i>
+                    <span>View Archived Conversations</span>
+                </div>
+
+                <div class="msg-section" *ngIf="pinnedConversations.length > 0">
+                    <h4 class="section-title"><i class="fa-solid fa-thumbtack"></i> PINNED MESSAGES</h4>
+                    <ng-container
+                        *ngTemplateOutlet="conversationList; context: { $implicit: pinnedConversations }"></ng-container>
+                </div>
+
+                <div class="msg-section">
+                    <h4 class="section-title"><i class="fa-solid fa-message"></i> DIRECT MESSAGES</h4>
+                    <ng-container
+                        *ngTemplateOutlet="conversationList; context: { $implicit: directConversations }"></ng-container>
+                </div>
+            </div>
+
+            <!-- Archived View (V30) -->
+            <div class="list-section archived-view" *ngIf="showArchived">
+                <div class="archive-header" (click)="showArchived = false">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Back to Inbox</span>
+                </div>
+                <h4 class="section-title"><i class="fa-solid fa-box-archive"></i> ARCHIVED MESSAGES</h4>
+                <div *ngIf="archivedConversations.length === 0" class="empty-archive">
+                    <p>No archived conversations</p>
+                </div>
+                <ng-container
+                    *ngTemplateOutlet="conversationList; context: { $implicit: archivedConversations }"></ng-container>
+            </div>
+
+            <!-- Reusable Conversation List Template -->
+            <ng-template #conversationList let-convs>
+                <div *ngFor="let conversation of convs" class="swipe-container"
+                    [class.has-actions]="activeActionId === conversation.id">
+                    <div class="conversation-item" [class.active]="selectedConversation?.id === conversation.id"
+                        [class.is-glow]="conversation.unreadCount > 0" (click)="selectConversation(conversation)">
+
+                        <div class="avatar-wrap">
+                            <img *ngIf="getOtherParticipantAvatar(conversation)"
+                                [src]="getOtherParticipantAvatar(conversation)">
+                            <div class="initials" *ngIf="!getOtherParticipantAvatar(conversation)">
+                                {{ getInitials(getOtherParticipantName(conversation)) }}
+                            </div>
+                            <span class="online-dot" [class.active]="conversation.unreadCount > 0"></span>
+                        </div>
+
+                        <div class="item-content">
+                            <div class="item-top">
+                                <span class="name">{{ getOtherParticipantName(conversation) }}</span>
+                                <span class="time">{{ formatTime(conversation.lastMessageAt || '') }}</span>
+                            </div>
+                            <div class="item-bottom">
+                                <span class="preview" [class.unread]="conversation.unreadCount > 0"
+                                    [class.is-typing]="$any(conversation).isTyping">
+                                    <ng-container *ngIf="!$any(conversation).isTyping">
+                                        {{ conversation.lastMessage || 'Click to chat' }}
+                                    </ng-container>
+                                    <ng-container *ngIf="$any(conversation).isTyping">
+                                        <span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>
+                                        typing
+                                    </ng-container>
+                                </span>
+                                <div class="item-actions">
+                                    <i class="fa-solid fa-thumbtack pin-indicator"
+                                        [class.active]="conversation.pinned"></i>
+                                    <span class="unread-count" *ngIf="conversation.unreadCount > 0">{{
+                                        conversation.unreadCount }}</span>
+                                    <div class="more-btn-trigger"
+                                        (click)="activeActionId = (activeActionId === conversation.id ? null : conversation.id); $event.stopPropagation()">
+                                        <i class="fa-solid fa-ellipsis"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Swipe Action Layer -->
+                    <div class="action-reveal">
+                        <div class="a-btn grey-btn" (click)="activeActionId = null; $event.stopPropagation()">
+                            <i class="fa-solid fa-ellipsis"></i>
+                        </div>
+                        <div class="a-btn red-btn" (click)="deleteConversation(conversation, $event)">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </div>
+                        <div class="a-btn blue-btn" (click)="togglePin(conversation, $event)">
+                            <i class="fa-solid fa-thumbtack"></i>
+                        </div>
+                        <div class="a-btn sky-btn" (click)="archiveConversation(conversation, $event)"
+                            [title]="conversation.archived ? 'Unarchive' : 'Archive'">
+                            <i class="fa-solid" [class.fa-box-open]="conversation.archived"
+                                [class.fa-envelope]="!conversation.archived"></i>
+                        </div>
+                    </div>
+                </div>
+            </ng-template>
+        </div>
+    </aside>
+
+    <!-- Main Viewport (V10) -->
+    <main class="chat-viewport">
+        <div class="empty-state" *ngIf="!selectedConversation">
+            <div class="empty-content">
+                <i class="fa-regular fa-comments"></i>
+                <h1>Welcome to Chat Buddies</h1>
+                <p>Select a friend to start a real-time conversation.</p>
+            </div>
+        </div>
+
+        <div class="active-chat" *ngIf="selectedConversation">
+            <header class="chat-main-header">
+                <div class="user-info">
+                    <div class="header-avatar">
+                        <img *ngIf="getOtherParticipantAvatar(selectedConversation)"
+                            [src]="getOtherParticipantAvatar(selectedConversation)">
+                        <div class="initials" *ngIf="!getOtherParticipantAvatar(selectedConversation)">
+                            {{ getInitials(getOtherParticipantName(selectedConversation)) }}
+                        </div>
+                    </div>
+                    <div class="info-text">
+                        <h3>{{ getOtherParticipantName(selectedConversation) }}</h3>
+                        <span class="status" [class.text-success]="!typingUser" [class.typing-glow]="typingUser">
+                            {{ typingUser ? typingUser + ' is typing...' : 'Online' }}
+                        </span>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="action-btn"><i class="fa-solid fa-phone"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-video"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                </div>
+            </header>
+
+            <!-- Messages Area -->
+            <div class="messages-area" #messagesContainer>
+                <div class="messages-list">
+                    <div *ngFor="let message of messages; let i = index">
+                        <div class="date-sep"
+                            *ngIf="i === 0 || formatDate(messages[i-1].createdAt) !== formatDate(message.createdAt)">
+                            <span>{{ formatDate(message.createdAt) }}</span>
+                        </div>
+
+                        <div class="msg-block" [class.outgoing]="isOwnMessage(message)"
+                            [class.continued]="isContinuation(message, i)">
+                            <div class="msg-meta-row" *ngIf="!isContinuation(message, i)">
+                                <span class="m-time">{{ formatTime(message.createdAt) }}</span>
+                                <span class="m-name">{{ isOwnMessage(message) ? 'Me' :
+                                    formatDisplayName(message.senderName) }}</span>
+                            </div>
+
+                            <div class="msg-unit">
+                                <div class="msg-avatar"
+                                    [style.visibility]="isContinuation(message, i) ? 'hidden' : 'visible'">
+                                    <img *ngIf="isOwnMessage(message) ? currentUserAvatar : message.senderAvatar"
+                                        [src]="isOwnMessage(message) ? currentUserAvatar : message.senderAvatar">
+                                    <div class="initials"
+                                        *ngIf="isOwnMessage(message) ? !currentUserAvatar : !message.senderAvatar">
+                                        {{ getInitials(isOwnMessage(message) ? currentUserName : message.senderName) }}
+                                    </div>
+                                </div>
+
+                                <div class="msg-bubble-wrap">
+                                    <div class="bubble" [class.voice-message]="message.messageType === 'VOICE'">
+                                        <!-- Content based on type -->
+                                        <div *ngIf="message.messageType === 'TEXT'">{{ message.content }}</div>
+                                        <div *ngIf="message.messageType === 'IMAGE'" class="media-content">
+                                            <img [src]="message.mediaUrl" (click)="openImage(message.mediaUrl)"
+                                                alt="Image">
+                                        </div>
+                                        <div *ngIf="message.messageType === 'VOICE'" class="media-content voice-note">
+                                            <div class="voice-player" (click)="toggleVocal(message)">
+                                                <div class="play-btn">
+                                                    <i class="fa-solid" [class.fa-play]="activeAudioId !== message.id"
+                                                        [class.fa-pause]="activeAudioId === message.id"></i>
+                                                </div>
+                                                <div class="waveform-wrap">
+                                                    <div class="wave-bar"></div>
+                                                    <div class="wave-bar"></div>
+                                                    <div class="wave-bar"></div>
+                                                    <div class="wave-bar"></div>
+                                                    <div class="wave-bar"></div>
+                                                    <div class="wave-bar"></div>
+                                                    <div class="wave-bar active"></div>
+                                                    <div class="wave-bar active"></div>
+                                                    <div class="wave-bar active"></div>
+                                                    <div class="wave-bar active"></div>
+                                                    <div class="wave-bar"></div>
+                                                    <div class="wave-bar"></div>
+                                                    <div class="wave-bar"></div>
+                                                    <div class="wave-bar"></div>
+                                                    <div class="wave-bar"></div>
+                                                    <div class="wave-bar"></div>
+                                                    <div class="wave-bar active"></div>
+                                                    <div class="wave-bar active"></div>
+                                                    <div class="wave-bar"></div>
+                                                    <div class="wave-bar"></div>
+                                                    <div class="wave-bar"></div>
+                                                </div>
+                                                <span class="v-dur">0:04</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="bubble-status" *ngIf="isOwnMessage(message)">
+                                            <i class="fa-solid fa-check-double" [class.read]="message.read"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Footer with Emoji Picker and Recording -->
+            <footer class="chat-main-footer">
+                <!-- Emoji Picker -->
+                <div class="emoji-picker-popover" *ngIf="showEmojiPicker">
+                    <div class="emoji-categories">
+                        <span *ngFor="let cat of emojiCategories" (click)="selectedEmojiCategory = cat.name"
+                            [class.active]="selectedEmojiCategory === cat.name">
+                            {{ cat.icons[0] }}
+                        </span>
+                    </div>
+                    <div class="emoji-grid">
+                        <span *ngFor="let emoji of activeEmojis" (click)="addEmoji(emoji)">{{ emoji }}</span>
+                    </div>
+                </div>
+
+                <!-- Recording Overlay -->
+                <div class="recording-bar" *ngIf="isRecording">
+                    <div class="rec-info">
+                        <div class="rec-dot"></div>
+                        <span class="rec-label">REC</span>
+                        <span class="rec-time">REMAINING: {{ recordingTime }}s</span>
+                    </div>
+                    <div class="rec-actions">
+                        <button class="cancel-btn" (click)="cancelRecording()" title="Cancel">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                        <button class="stop-btn" (click)="stopRecording()" title="Send">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="input-container" *ngIf="!isRecording">
+                    <div class="input-pill">
+                        <i class="fa-regular fa-face-smile icon-left" (click)="toggleEmojiPicker()"></i>
+                        <textarea [(ngModel)]="newMessage" (input)="onInputChange()" (keypress)="onKeyPress($event)"
+                            placeholder="Type message..."></textarea>
+                        <div class="icons-right">
+                            <i class="fa-solid fa-microphone" (click)="startRecording()"></i>
+                            <i class="fa-solid fa-paperclip" (click)="openFileInput('image')"></i>
+                        </div>
+                    </div>
+                    <button class="send-btn" (click)="sendMessage()" [disabled]="!newMessage.trim() && !uploadingFile">
+                        {{ uploadingFile ? '...' : 'Send' }} <i class="fa-solid fa-paper-plane"
+                            *ngIf="!uploadingFile"></i>
+                    </button>
+                </div>
+            </footer>
+        </div>
+    </main>
+</div>

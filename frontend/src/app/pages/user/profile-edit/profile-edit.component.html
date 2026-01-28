@@ -1,0 +1,82 @@
+<div class="profile-edit-page">
+    <div class="container">
+        <div class="page-header">
+            <h1><i class="fas fa-user-edit"></i> Edit Profile</h1>
+            <a routerLink="/profile" class="btn btn-outline">
+                <i class="fas fa-arrow-left"></i>
+                Back to Profile
+            </a>
+        </div>
+
+        <div class="edit-card card">
+            <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+                <!-- Avatar Upload -->
+                <div class="avatar-upload">
+                    <div class="avatar-preview">
+                        <img *ngIf="avatarPreview" [src]="avatarPreview" alt="Avatar">
+                        <div *ngIf="!avatarPreview" class="avatar-placeholder">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                    <div class="avatar-upload-btn">
+                        <label for="avatar" class="btn btn-primary">
+                            <i class="fas fa-camera"></i>
+                            Change Photo
+                        </label>
+                        <input type="file" id="avatar" accept="image/*" (change)="onFileSelected($event)"
+                            style="display: none;">
+                        <p class="hint-text">JPG, PNG or GIF. Max size 2MB</p>
+                    </div>
+                </div>
+
+                <!-- Personal Information -->
+                <div class="form-section">
+                    <h3>Personal Information</h3>
+                    <div class="form-row">
+                        <app-form-input [control]="profileForm.get('firstName')!" label="First Name" type="text"
+                            placeholder="John" [required]="true"></app-form-input>
+
+                        <app-form-input [control]="profileForm.get('lastName')!" label="Last Name" type="text"
+                            placeholder="Doe" [required]="true"></app-form-input>
+                    </div>
+
+                    <app-form-input [control]="profileForm.get('email')!" label="Email Address" type="email"
+                        placeholder="john.doe@example.com" [required]="true"></app-form-input>
+
+                    <app-form-input [control]="profileForm.get('phone')!" label="Phone Number" type="tel"
+                        placeholder="+1234567890"></app-form-input>
+
+                    <app-form-input [control]="profileForm.get('dateOfBirth')!" label="Date of Birth"
+                        type="date"></app-form-input>
+                </div>
+
+                <!-- Address -->
+                <div class="form-section">
+                    <h3>Address</h3>
+                    <app-form-input [control]="profileForm.get('address')!" label="Address" type="textarea"
+                        placeholder="123 Main St, City, Country"></app-form-input>
+                </div>
+
+                <!-- License Information -->
+                <div class="form-section">
+                    <h3>License Information</h3>
+                    <app-form-input [control]="profileForm.get('drivingLicenseNumber')!" label="Driving License Number"
+                        type="text" placeholder="DL12345678"></app-form-input>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="button" routerLink="/profile" class="btn btn-outline">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+                        <span *ngIf="!isLoading">Save Changes</span>
+                        <span *ngIf="isLoading">Saving...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<app-loading-spinner *ngIf="isLoading" [overlay]="true" message="Updating profile..."></app-loading-spinner>

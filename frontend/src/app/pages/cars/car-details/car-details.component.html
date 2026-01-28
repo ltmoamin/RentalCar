@@ -1,0 +1,167 @@
+<div class="car-details-page" *ngIf="car">
+    <div class="container">
+        <div class="breadcrumb animate-fade-in">
+            <a routerLink="/cars">Fleet</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>{{ car.brand }} {{ car.model }}</span>
+        </div>
+
+        <div class="details-grid">
+            <!-- Media Section -->
+            <section class="media-section animate-scale-in">
+                <div class="main-image">
+                    <img [src]="car.imageUrl | carImage" [alt]="car.brand + ' ' + car.model">
+                    <div class="badge-overlay animate-slide-down" [class.available]="car.available">
+                        {{ car.available ? 'Available' : 'Reserved' }}
+                    </div>
+                </div>
+            </section>
+
+            <!-- Info Section -->
+            <section class="info-section">
+                <div class="info-header animate-slide-up">
+                    <div class="title-group">
+                        <span class="category-tag">{{ car.category }}</span>
+                        <h1>{{ car.brand }} {{ car.model }}</h1>
+                        <div class="rating-header-summary" *ngIf="car.reviewCount > 0">
+                            <app-rating-stars [rating]="car.averageRating" [readonly]="true"></app-rating-stars>
+                            <span class="count">({{ car.reviewCount }} reviews)</span>
+                        </div>
+                        <p class="year">Model Year: {{ car.year }}</p>
+                    </div>
+                    <div class="price-bubble animate-scale-in stagger-2">
+                        <span class="price-amount">\${{ car.pricePerDay }}</span>
+                        <span class="price-label">per day</span>
+                    </div>
+                </div>
+
+                <div class="specs-grid animate-fade-in stagger-3">
+                    <div class="spec-card animate-slide-up stagger-1">
+                        <i class="fas fa-cog"></i>
+                        <div class="spec-info">
+                            <span class="label">Transmission</span>
+                            <span class="value">{{ car.transmission }}</span>
+                        </div>
+                    </div>
+                    <div class="spec-card animate-slide-up stagger-2">
+                        <i class="fas fa-gas-pump"></i>
+                        <div class="spec-info">
+                            <span class="label">Fuel Type</span>
+                            <span class="value">{{ car.fuelType }}</span>
+                        </div>
+                    </div>
+                    <div class="spec-card animate-slide-up stagger-3">
+                        <i class="fas fa-users"></i>
+                        <div class="spec-info">
+                            <span class="label">Seats</span>
+                            <span class="value">{{ car.seats }} Seats</span>
+                        </div>
+                    </div>
+                    <div class="spec-card animate-slide-up stagger-4">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <div class="spec-info">
+                            <span class="label">Mileage</span>
+                            <span class="value">Unlimited</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="description-section animate-slide-up stagger-4">
+                    <h3>Description</h3>
+                    <p>{{ car.description || 'No description available for this vehicle. Contact us for more details
+                        about its performance and premium features.' }}</p>
+                </div>
+
+                <div class="action-card animate-slide-up stagger-5" [class.unavailable]="!car.available">
+                    <div class="card-header-premium">
+                        <h3>Book This Vehicle</h3>
+                        <div class="availability-status" *ngIf="busyDates.length > 0">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Occupied dates exist in the future</span>
+                        </div>
+                    </div>
+
+                    <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()" class="booking-form">
+                        <div class="date-selection">
+                            <div class="form-group-premium">
+                                <label for="startDate">Pickup Date</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <input type="date" id="startDate" formControlName="startDate" [min]="minDate"
+                                        class="form-control-premium"
+                                        [class.is-invalid]="(bookingForm.get('startDate')?.invalid || bookingForm.hasError('dateOrder')) && bookingForm.get('startDate')?.touched">
+                                </div>
+                            </div>
+                            <div class="form-group-premium">
+                                <label for="endDate">Return Date</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-calendar-check"></i>
+                                    <input type="date" id="endDate" formControlName="endDate"
+                                        [min]="bookingForm.get('startDate')?.value || minDate"
+                                        class="form-control-premium"
+                                        [class.is-invalid]="(bookingForm.get('endDate')?.invalid || bookingForm.hasError('dateOrder')) && bookingForm.get('endDate')?.touched">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="validation-error"
+                            *ngIf="bookingForm.hasError('dateOrder') && bookingForm.get('endDate')?.touched">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Return date must be after pickup date.
+                        </div>
+
+                        <div class="busy-dates-summary" *ngIf="busyDates.length > 0">
+                            <h5>Occupied Dates:</h5>
+                            <ul>
+                                <li *ngFor="let b of busyDates.slice(0, 3)">
+                                    {{ b.startDate | date:'MMM d' }} - {{ b.endDate | date:'MMM d' }}
+                                </li>
+                                <li *ngIf="busyDates.length > 3">And more...</li>
+                            </ul>
+                        </div>
+
+                        <div class="pricing-summary animate-fade-in" *ngIf="car.available">
+                            <div class="price-row">
+                                <span class="label">Daily Rate</span>
+                                <span class="value">\${{ car.pricePerDay | number:'1.2-2' }}</span>
+                            </div>
+                            <div class="price-row" *ngIf="days > 0">
+                                <span class="label">Duration</span>
+                                <span class="value">{{ days }} Days</span>
+                            </div>
+                            <div class="price-row" *ngIf="days > 0">
+                                <span class="label">Subtotal</span>
+                                <span class="value">\${{ subtotal | number:'1.2-2' }}</span>
+                            </div>
+                            <div class="price-row" *ngIf="days > 0">
+                                <span class="label">VAT (15%)</span>
+                                <span class="value">\${{ tax | number:'1.2-2' }}</span>
+                            </div>
+                            <div class="price-row" *ngIf="days > 0">
+                                <span class="label">Service Fee</span>
+                                <span class="value">\${{ serviceFee | number:'1.2-2' }}</span>
+                            </div>
+                            <div class="divider"></div>
+                            <div class="price-row total">
+                                <span class="label">Grand Total</span>
+                                <span class="value">\${{ totalPrice | number:'1.2-2' }}</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100"
+                            [disabled]="!car.available || bookingForm.invalid || isBooking">
+                            <span *ngIf="!isBooking">{{ car.available ? 'Confirm Reservation' : 'Currently Unavailable'
+                                }}</span>
+                            <span *ngIf="isBooking"><i class="fas fa-spinner fa-spin"></i> Processing...</span>
+                        </button>
+                    </form>
+                    <p class="terms-hint">Secure checkout with SSL encryption.</p>
+                </div>
+            </section>
+        </div>
+
+        <app-review-list *ngIf="car.id" [carId]="car.id"></app-review-list>
+    </div>
+</div>
+
+<app-loading-spinner *ngIf="isLoading" message="Fetching vehicle details..."></app-loading-spinner>

@@ -1,0 +1,102 @@
+<div class="create-ticket-container">
+    <div class="header-section">
+        <button class="btn-back" routerLink="/profile/support">
+            <i class="fas fa-arrow-left"></i> Back to Support
+        </button>
+        <h1>Create New Ticket</h1>
+        <p>Please provide details about your issue and we'll get back to you as soon as possible.</p>
+    </div>
+
+    <div class="card">
+        <form [formGroup]="ticketForm" (ngSubmit)="onSubmit()">
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label for="subject">Subject</label>
+                    <input type="text" id="subject" formControlName="subject"
+                        placeholder="E.g., Payment issue with booking #1024"
+                        [class.invalid]="ticketForm.get('subject')?.touched && ticketForm.get('subject')?.invalid">
+                    <div class="error-msg"
+                        *ngIf="ticketForm.get('subject')?.touched && ticketForm.get('subject')?.errors?.['required']">
+                        Subject is required.
+                    </div>
+                    <div class="error-msg"
+                        *ngIf="ticketForm.get('subject')?.touched && ticketForm.get('subject')?.errors?.['minlength']">
+                        Subject must be at least 5 characters.
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="issueType">Category</label>
+                    <select id="issueType" formControlName="issueType">
+                        <option *ngFor="let type of issueTypes" [value]="type">{{type}}</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="priority">Priority</label>
+                    <select id="priority" formControlName="priority">
+                        <option *ngFor="let priority of priorities" [value]="priority">{{priority}}</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="bookingId">Linked Booking (Optional)</label>
+                    <select id="bookingId" formControlName="bookingId">
+                        <option [ngValue]="null">None</option>
+                        <option *ngFor="let booking of bookings" [value]="booking.id">
+                            Booking #{{booking.id}} - {{booking.carName}}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="description">Description</label>
+                    <textarea id="description" formControlName="description" rows="6"
+                        placeholder="Describe your issue in detail..."
+                        [class.invalid]="ticketForm.get('description')?.touched && ticketForm.get('description')?.invalid"></textarea>
+                    <div class="error-msg"
+                        *ngIf="ticketForm.get('description')?.touched && ticketForm.get('description')?.errors?.['required']">
+                        Description is required.
+                    </div>
+                    <div class="error-msg"
+                        *ngIf="ticketForm.get('description')?.touched && ticketForm.get('description')?.errors?.['minlength']">
+                        Please provide more detail (min 20 characters).
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label>Attachments (Optional)</label>
+                    <div class="file-upload-area" *ngIf="!filePreview" (click)="fileInput.click()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Click or drag to upload an image or video</p>
+                        <input #fileInput type="file" (change)="onFileSelected($event)" hidden accept="image/*,video/*">
+                    </div>
+
+                    <div class="file-preview" *ngIf="filePreview">
+                        <div class="preview-container">
+                            <img [src]="filePreview" alt="upload-preview"
+                                *ngIf="selectedFile?.type?.startsWith('image')">
+                            <video [src]="filePreview" *ngIf="selectedFile?.type?.startsWith('video')"></video>
+                            <div class="attachment-info">
+                                <span>{{selectedFile?.name}}</span>
+                                <button type="button" class="btn-remove" (click)="removeFile()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn-cancel" routerLink="/profile/support">Cancel</button>
+                <button type="submit" class="btn-submit" [disabled]="ticketForm.invalid || submitting">
+                    <span *ngIf="!submitting">Create Ticket</span>
+                    <span *ngIf="submitting">
+                        <i class="fas fa-spinner fa-spin"></i> {{isUploading ? 'Uploading...' : 'Submitting...'}}
+                    </span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

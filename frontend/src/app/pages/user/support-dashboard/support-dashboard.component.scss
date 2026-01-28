@@ -1,0 +1,245 @@
+.support-container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: calc(100vh - 80px);
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+
+        .title-section {
+            h1 {
+                font-size: 2rem;
+                font-weight: 700;
+                color: #1a1a1a;
+                margin: 0;
+            }
+
+            p {
+                color: #666;
+                margin-top: 0.5rem;
+            }
+        }
+
+        .btn-create {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+            }
+        }
+    }
+
+    .loading-state,
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 4rem;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        text-align: center;
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #6366f1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            color: #e5e7eb;
+            margin-bottom: 1.5rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: #1a1a1a;
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        .btn-primary {
+            background: #6366f1;
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    }
+
+    .tickets-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+
+        .ticket-card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+
+            &:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+                border-color: #6366f1;
+            }
+
+            .ticket-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1rem;
+
+                .ticket-id {
+                    font-weight: 600;
+                    color: #9ca3af;
+                    font-family: 'monospace';
+                }
+
+                .status-badge {
+                    padding: 0.25rem 0.75rem;
+                    border-radius: 99px;
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    text-transform: uppercase;
+
+                    &.status-open {
+                        background: #eef2ff;
+                        color: #4f46e5;
+                    }
+
+                    &.status-progress {
+                        background: #fff7ed;
+                        color: #c2410c;
+                    }
+
+                    &.status-resolved {
+                        background: #f0fdf4;
+                        color: #15803d;
+                    }
+
+                    &.status-closed {
+                        background: #f9fafb;
+                        color: #6b7280;
+                    }
+                }
+            }
+
+            .ticket-subject {
+                font-size: 1.125rem;
+                font-weight: 700;
+                color: #1a1a1a;
+                margin: 0 0 0.75rem 0;
+            }
+
+            .ticket-description {
+                color: #4b5563;
+                font-size: 0.875rem;
+                line-height: 1.5;
+                margin-bottom: 1.25rem;
+            }
+
+            .ticket-meta {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 1rem;
+                margin-bottom: 1.25rem;
+                padding-top: 1rem;
+                border-top: 1px solid #f9fafb;
+
+                .meta-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    font-size: 0.75rem;
+                    color: #6b7280;
+
+                    i {
+                        color: #9ca3af;
+                    }
+                }
+            }
+
+            .ticket-footer {
+                margin-top: auto;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+
+                .priority-indicator {
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+
+                    i {
+                        font-size: 8px;
+                    }
+
+                    &.priority-low {
+                        color: #10b981;
+                    }
+
+                    &.priority-medium {
+                        color: #f59e0b;
+                    }
+
+                    &.priority-high {
+                        color: #f97316;
+                    }
+
+                    &.priority-urgent {
+                        color: #ef4444;
+                    }
+                }
+
+                .message-count {
+                    font-size: 0.75rem;
+                    color: #6b7280;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.4rem;
+                }
+            }
+        }
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

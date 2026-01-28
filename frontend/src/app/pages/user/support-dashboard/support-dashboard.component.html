@@ -1,0 +1,66 @@
+<div class="support-container">
+    <div class="header">
+        <div class="title-section">
+            <h1>Support & Disputes</h1>
+            <p>Manage your tickets and get assistance with your bookings.</p>
+        </div>
+        <button class="btn-create" routerLink="create">
+            <i class="fas fa-plus"></i> New Ticket
+        </button>
+    </div>
+
+    <div class="content-section">
+        <div *ngIf="loading" class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading your tickets...</p>
+        </div>
+
+        <div *ngIf="!loading && tickets.length === 0" class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-headset"></i>
+            </div>
+            <h2>No tickets found</h2>
+            <p>Need help? Create a support ticket and our team will assist you.</p>
+            <button class="btn-primary" routerLink="create">Create First Ticket</button>
+        </div>
+
+        <div *ngIf="!loading && tickets.length > 0" class="tickets-grid">
+            <div *ngFor="let ticket of tickets" class="ticket-card" [routerLink]="[ticket.id]">
+                <div class="ticket-header">
+                    <span class="ticket-id">#{{ticket.id}}</span>
+                    <span class="status-badge" [ngClass]="getStatusClass(ticket.status)">
+                        {{ticket.status}}
+                    </span>
+                </div>
+
+                <h3 class="ticket-subject">{{ticket.subject}}</h3>
+                <p class="ticket-description">{{ticket.description | slice:0:100}}{{ticket.description.length > 100 ?
+                    '...' : ''}}</p>
+
+                <div class="ticket-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-tag"></i>
+                        <span>{{ticket.issueType}}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-clock"></i>
+                        <span>{{ticket.createdAt | date:'mediumDate'}}</span>
+                    </div>
+                    <div class="meta-item" *ngIf="ticket.booking">
+                        <i class="fas fa-car"></i>
+                        <span>Booking #{{ticket.booking.id}}</span>
+                    </div>
+                </div>
+
+                <div class="ticket-footer">
+                    <div class="priority-indicator" [ngClass]="'priority-' + ticket.priority.toLowerCase()">
+                        <i class="fas fa-circle"></i> {{ticket.priority}} Priority
+                    </div>
+                    <div class="message-count" *ngIf="ticket.messages.length > 0">
+                        <i class="far fa-comment"></i> {{ticket.messages.length}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

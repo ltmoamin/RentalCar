@@ -1,0 +1,137 @@
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Analytics Overview</h1>
+        <p class="subtitle">Monitor your car rental business performance at a glance.</p>
+    </div>
+
+    <div class="loading-overlay" *ngIf="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="error-container" *ngIf="!loading && errorMessage">
+        <div class="error-card">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <h3>Oops! Something went wrong</h3>
+            <p>{{ errorMessage }}</p>
+            <button class="btn-primary" (click)="loadStats()">Try Again</button>
+        </div>
+    </div>
+
+    <ng-container *ngIf="!loading && stats && !errorMessage">
+        <!-- KPI Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon revenue">
+                    <i class="fa-solid fa-dollar-sign"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="label">Total Revenue</span>
+                    <h2 class="value">{{ stats.totalRevenue | currency }}</h2>
+                    <span class="trend positive">+12.5% vs last month</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon bookings">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="label">Total Bookings</span>
+                    <h2 class="value">{{ stats.totalBookings }}</h2>
+                    <span class="trend positive">{{ stats.bookingsToday }} today</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon active">
+                    <i class="fa-solid fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="label">Active Bookings</span>
+                    <h2 class="value">{{ stats.activeBookings }}</h2>
+                    <span class="trend">Live rentals</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon cars">
+                    <i class="fa-solid fa-car"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="label">Most Rented Car</span>
+                    <h2 class="value car-name">{{ stats.mostRentedCars[0].carName || 'N/A' }}</h2>
+                    <span class="trend">{{ stats.mostRentedCars[0].rentalCount || 0 }} rentals</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="charts-row">
+            <div class="chart-container main-chart">
+                <div class="chart-header">
+                    <h3>Revenue Trends</h3>
+                    <div class="chart-legend">
+                        <span class="dot primary"></span> Monthly Income
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas baseChart [data]="lineChartData" [options]="lineChartOptions" [type]="'line'">
+                    </canvas>
+                </div>
+            </div>
+
+            <div class="chart-container side-chart">
+                <div class="chart-header">
+                    <h3>Top Performing Cars</h3>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas baseChart [data]="barChartData" [options]="barChartOptions" [type]="'bar'">
+                    </canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Transactions Table -->
+        <div class="history-section">
+            <div class="section-header">
+                <h3>Recent Transactions</h3>
+                <button class="btn-text">View All</button>
+            </div>
+
+            <div class="table-card">
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Customer</th>
+                            <th>Car</th>
+                            <th>Period</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let booking of stats.recentBookings">
+                            <td>#{{ booking.id }}</td>
+                            <td class="user-cell">
+                                <div class="avatar-info">
+                                    <span class="user-name">{{ booking.userFullName }}</span>
+                                </div>
+                            </td>
+                            <td>{{ booking.carName }}</td>
+                            <td class="date-cell">
+                                {{ booking.startDate | date:'shortDate' }} - {{ booking.endDate | date:'shortDate' }}
+                            </td>
+                            <td class="price-cell">{{ booking.totalPrice | currency }}</td>
+                            <td>
+                                <span class="status-badge" [ngClass]="getStatusClass(booking.status)">
+                                    {{ booking.status }}
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </ng-container>
+</div>

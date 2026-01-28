@@ -1,0 +1,122 @@
+<div class="admin-support-container" (click)="closeDropdown()">
+    <div class="header">
+        <div class="title-section">
+            <h1>Support Tickets Management</h1>
+            <p>Monitor and resolve user issues and disputes.</p>
+        </div>
+        <div class="stats-overview">
+            <div class="stat-card">
+                <span class="label">Total</span>
+                <span class="value">{{tickets.length}}</span>
+            </div>
+            <div class="stat-card open">
+                <span class="label">Open</span>
+                <span class="value">{{tickets | filter:'status':TicketStatusEnum.OPEN}}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search by ID, subject, or user email..." [(ngModel)]="searchTerm"
+                (input)="applyFilters()">
+        </div>
+
+        <div class="filters">
+            <select [(ngModel)]="statusFilter" (change)="applyFilters()">
+                <option value="ALL">All Status</option>
+                <option [value]="TicketStatusEnum.OPEN">Open</option>
+                <option [value]="TicketStatusEnum.IN_PROGRESS">In Progress</option>
+                <option [value]="TicketStatusEnum.RESOLVED">Resolved</option>
+                <option [value]="TicketStatusEnum.CLOSED">Closed</option>
+            </select>
+
+            <select [(ngModel)]="priorityFilter" (change)="applyFilters()">
+                <option value="ALL">All Priority</option>
+                <option value="URGENT">Urgent</option>
+                <option value="HIGH">High</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="LOW">Low</option>
+            </select>
+
+            <select [(ngModel)]="categoryFilter" (change)="applyFilters()">
+                <option value="ALL">All Categories</option>
+                <option value="PAYMENT">Payment</option>
+                <option value="CAR_ISSUE">Car Issue</option>
+                <option value="DELAY">Delay</option>
+                <option value="REFUND">Refund</option>
+                <option value="OTHER">Other</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="tickets-table-container">
+        <table class="tickets-table" *ngIf="!loading">
+            <thead>
+                <tr>
+                    <th>Ticket</th>
+                    <th>User</th>
+                    <th>Category</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Last Update</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let ticket of filteredTickets">
+                    <td>
+                        <div class="ticket-info">
+                            <span class="id">#{{ticket.id}}</span>
+                            <span class="subject">{{ticket.subject}}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="user-info">
+                            <span class="name">{{ticket.user.firstName}} {{ticket.user.lastName}}</span>
+                            <span class="email">{{ticket.user.email}}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="category-badge">{{ticket.issueType}}</span>
+                    </td>
+                    <td>
+                        <span class="priority-indicator" [ngClass]="'priority-' + ticket.priority.toLowerCase()">
+                            {{ticket.priority}}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge" [ngClass]="getStatusClass(ticket.status)">{{ticket.status}}</span>
+                    </td>
+                    <td class="date-cell">{{ticket.updatedAt | date:'short'}}</td>
+                    <td class="actions-cell">
+                        <button class="btn-view" [routerLink]="['/admin/support', ticket.id]" title="View Thread">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <div class="dropdown">
+                            <button class="btn-status" (click)="toggleDropdown($event, ticket.id)"
+                                title="Change Status">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <div class="dropdown-content" [class.show]="activeDropdown === ticket.id">
+                                <a (click)="updateStatus(ticket.id, TicketStatusEnum.IN_PROGRESS)">Mark In Progress</a>
+                                <a (click)="updateStatus(ticket.id, TicketStatusEnum.RESOLVED)">Mark Resolved</a>
+                                <a (click)="updateStatus(ticket.id, TicketStatusEnum.CLOSED)">Mark Closed</a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div *ngIf="loading" class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading tickets...</p>
+        </div>
+
+        <div *ngIf="!loading && filteredTickets.length === 0" class="empty-state">
+            <p>No tickets matching your filters.</p>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,121 @@
+<div class="auth-layout">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <i class="fas fa-car"></i>
+                </div>
+                <h1>Create Account</h1>
+                <p>Join RentalCar and start your journey</p>
+            </div>
+
+            <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form multi-step-form">
+                <!-- Steps Indicator -->
+                <div class="steps-indicator">
+                    <div class="step" [class.active]="currentStep === 1" [class.completed]="currentStep > 1">
+                        <div class="step-circle">1</div>
+                        <span class="step-label">Personal</span>
+                    </div>
+                    <div class="step" [class.active]="currentStep === 2" [class.completed]="currentStep > 2">
+                        <div class="step-circle">2</div>
+                        <span class="step-label">Account</span>
+                    </div>
+                    <div class="step" [class.active]="currentStep === 3" [class.completed]="currentStep > 3">
+                        <div class="step-circle">3</div>
+                        <span class="step-label">Finish</span>
+                    </div>
+                </div>
+
+                <!-- Step 1: Personal Info -->
+                <div class="step-content" *ngIf="currentStep === 1">
+                    <div class="form-row">
+                        <app-form-input [control]="registerForm.get('firstName')!" label="First Name" type="text"
+                            placeholder="John" icon="fa-user" [required]="true"></app-form-input>
+
+                        <app-form-input [control]="registerForm.get('lastName')!" label="Last Name" type="text"
+                            placeholder="Doe" icon="fa-user" [required]="true"></app-form-input>
+                    </div>
+
+                    <app-form-input [control]="registerForm.get('email')!" label="Email Address" type="email"
+                        placeholder="john.doe@example.com" icon="fa-envelope" [required]="true"></app-form-input>
+
+                    <div class="step-actions">
+                        <button type="button" class="btn-auth" (click)="nextStep()">
+                            Continue
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Account Details -->
+                <div class="step-content" *ngIf="currentStep === 2">
+                    <app-form-input [control]="registerForm.get('password')!" label="Password" type="password"
+                        placeholder="Create a strong password" icon="fa-lock" [required]="true"></app-form-input>
+
+                    <app-password-strength [passwordControl]="passwordControl"></app-password-strength>
+
+                    <app-form-input [control]="registerForm.get('confirmPassword')!" label="Confirm Password"
+                        type="password" placeholder="Re-enter your password" icon="fa-lock"
+                        [required]="true"></app-form-input>
+
+                    <div class="step-actions">
+                        <button type="button" class="btn-secondary" (click)="previousStep()">
+                            Back
+                        </button>
+                        <button type="button" class="btn-auth" (click)="nextStep()">
+                            Continue
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Additional Info -->
+                <div class="step-content" *ngIf="currentStep === 3">
+                    <app-form-input [control]="registerForm.get('phone')!" label="Phone Number" type="tel"
+                        placeholder="+1234567890" icon="fa-phone"
+                        hint="Optional - for booking confirmations"></app-form-input>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="acceptTerms" formControlName="acceptTerms">
+                        <label for="acceptTerms">
+                            I accept the <a href="#" style="color: var(--primary-color);">Terms and Conditions</a>
+                        </label>
+                    </div>
+                    <div *ngIf="registerForm.get('acceptTerms')?.invalid && registerForm.get('acceptTerms')?.touched"
+                        style="color: #ef4444; font-size: 0.875rem; margin-top: -0.5rem;">
+                        You must accept the terms and conditions
+                    </div>
+
+                    <div class="step-actions">
+                        <button type="button" class="btn-secondary" (click)="previousStep()">
+                            Back
+                        </button>
+                        <button type="submit" class="btn-auth" [disabled]="isLoading">
+                            <span *ngIf="!isLoading">Create Account</span>
+                            <span *ngIf="isLoading">Creating...</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="divider" *ngIf="currentStep === 1">
+                <span>or sign up with</span>
+            </div>
+
+            <div class="social-login" *ngIf="currentStep === 1">
+                <button type="button" class="social-btn google" (click)="socialRegister('Google')">
+                    <i class="fab fa-google"></i>
+                    <span>Google</span>
+                </button>
+                <button type="button" class="social-btn apple" (click)="socialRegister('Apple')">
+                    <i class="fab fa-apple"></i>
+                    <span>Apple</span>
+                </button>
+            </div>
+
+            <div class="auth-footer">
+                Already have an account? <a routerLink="/login">Login</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<app-loading-spinner *ngIf="isLoading" [overlay]="true" message="Creating your account..."></app-loading-spinner>
