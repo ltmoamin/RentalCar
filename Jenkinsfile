@@ -4,7 +4,7 @@ pipeline {
     options {
         buildDiscarder(logRotator(numToKeepStr: '10'))
         timestamps()
-        timeout(time: 1, unit: 'HOURS')
+        timeout(time: 2, unit: 'HOURS')
     }
 
     parameters {
@@ -19,7 +19,7 @@ pipeline {
         DOCKER_HUB_REPO = 'moamina'
         BACKEND_IMAGE = "${DOCKER_HUB_REPO}/${APP_NAME}-backend"
         FRONTEND_IMAGE = "${DOCKER_HUB_REPO}/${APP_NAME}-frontend"
-        BUILD_TAG = "${BUILD_NUMBER}-${env.BUILD_TIMESTAMP}"
+        BUILD_TAG = "${BUILD_NUMBER}-${System.currentTimeMillis()}"
         DOCKER_COMPOSE_FILE = 'docker-compose.yml'
         GIT_CREDENTIALS = 'credential-git'
         DOCKER_CREDENTIALS = 'docker-hub-credentials'
