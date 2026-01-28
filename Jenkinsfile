@@ -68,7 +68,7 @@ pipeline {
                     dir('frontend') {
                         sh '''
                             echo "Installing dependencies..."
-                            npm install
+                            npm install --legacy-peer-deps
                             
                             echo "Building production bundle..."
                             npm run build
