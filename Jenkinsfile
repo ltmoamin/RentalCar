@@ -49,6 +49,7 @@ pipeline {
                     dir('backend') {
                         sh '''
                             echo "Building backend with Maven..."
+                            chmod +x mvnw
                             if [ "$SKIP_TESTS" = "true" ]; then
                                 ./mvnw clean package -DskipTests
                             else
