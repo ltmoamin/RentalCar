@@ -1,0 +1,60 @@
+pipeline {
+    agent any
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timestamps()
+    }
+
+    environment {
+        DOCKER_REGISTRY = "${env.DOCKER_REGISTRY ?: 'localhost:5000'}"
+        APP_NAME = 'rentalcar'
+        REGISTRY_CREDENTIALS = credentials('docker-registry-credentials')
+    }
+
+    stages {
+        stage('Stop Services') {
+            steps {
+                script {
+                    echo "========== Stopping RentalCar Services =========="
+                    sh '''
+                        if [ -f "docker-compose.yml" ]; then
+                            docker-compose down
+                        fi
+                    '''
+                }
+            }
+        }
+
+        stage('Remove Images') {
+            steps {
+                script {
+                    echo "========== Removing Docker Images =========="
+                    sh '''
+                        docker rmi ${DOCKER_REGISTRY}/${APP_NAME}-backend:latest || true
+                        docker rmi ${DOCKER_REGISTRY}/${APP_NAME}-frontend:latest || true
+                    '''
+                }
+            }
+        }
+
+        stage('Cleanup Data (Optional)') {
+            steps {
+                script {
+                    echo "========== Cleanup Volumes (Optional) =========="
+                    sh '''
+                        # Uncomment to remove volumes
+                        # docker volume rm rentalcar-mysql || true
+                        echo "Volumes preserved for data persistence"
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "========== Cleanup Complete =========="
+        }
+    }
+}
