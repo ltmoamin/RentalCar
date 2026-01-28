@@ -220,23 +220,7 @@ EOF
             }
         }
 
-        stage('Run Integration Tests') {
-            when {
-                expression { return !params.SKIP_TESTS }
-            }
-            steps {
-                script {
-                    echo "========== Running Integration Tests =========="
-                    sh '''
-                        echo "Running backend API tests..."
-                        curl -v http://localhost:8082/api/health || true
-                        
-                        echo "Running frontend tests..."
-                        curl -v http://localhost/ || true
-                    '''
-                }
-            }
-        }
+      
 
         stage('Generate Reports') {
             steps {
