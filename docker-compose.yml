@@ -26,9 +26,7 @@ services:
 
   # Spring Boot Backend
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ${BACKEND_IMAGE:-moamina/rentalcar-backend:latest}
     container_name: rentalcar-backend
     restart: unless-stopped
     depends_on:
@@ -62,9 +60,7 @@ services:
 
   # Angular Frontend
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: ${FRONTEND_IMAGE:-moamina/rentalcar-frontend:latest}
     container_name: rentalcar-frontend
     restart: unless-stopped
     depends_on:

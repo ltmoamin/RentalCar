@@ -14,12 +14,15 @@ pipeline {
     }
 
     environment {
-        DOCKER_REGISTRY = "${env.DOCKER_REGISTRY ?: 'localhost:5000'}"
+        DOCKER_REGISTRY = "${env.DOCKER_REGISTRY ?: 'docker.io'}"
         APP_NAME = 'rentalcar'
-        BACKEND_IMAGE = "${DOCKER_REGISTRY}/${APP_NAME}-backend"
-        FRONTEND_IMAGE = "${DOCKER_REGISTRY}/${APP_NAME}-frontend"
+        DOCKER_HUB_REPO = 'moamina'
+        BACKEND_IMAGE = "${DOCKER_HUB_REPO}/${APP_NAME}-backend"
+        FRONTEND_IMAGE = "${DOCKER_HUB_REPO}/${APP_NAME}-frontend"
         BUILD_TAG = "${BUILD_NUMBER}-${env.BUILD_TIMESTAMP}"
         DOCKER_COMPOSE_FILE = 'docker-compose.yml'
+        GIT_CREDENTIALS = 'credential-git'
+        DOCKER_CREDENTIALS = 'docker-hub-credentials'
     }
 
     stages {
@@ -31,7 +34,10 @@ pipeline {
                 checkout([
                     $class: 'GitSCM',
                     branches: [[name: "*/${params.GIT_BRANCH}"]],
-                    userRemoteConfigs: [[url: 'https://github.com/your-repo/rentalcar.git']]
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/ltmoamin/RentalCar.git',
+                        credentialsId: "${GIT_CREDENTIALS}"
+                    ]]
                 ])
             }
         }
@@ -119,15 +125,21 @@ pipeline {
             steps {
                 script {
                     echo "========== Pushing Docker Images to Registry =========="
-                    sh '''
-                        echo "Pushing backend image..."
-                        docker push ${BACKEND_IMAGE}:${BUILD_TAG}
-                        docker push ${BACKEND_IMAGE}:${ENVIRONMENT}-latest
-                        
-                        echo "Pushing frontend image..."
-                        docker push ${FRONTEND_IMAGE}:${BUILD_TAG}
-                        docker push ${FRONTEND_IMAGE}:${ENVIRONMENT}-latest
-                    '''
+                    withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS}", usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh '''
+                            echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+                            
+                            echo "Pushing backend image..."
+                            docker push ${BACKEND_IMAGE}:${BUILD_TAG}
+                            docker push ${BACKEND_IMAGE}:${ENVIRONMENT}-latest
+                            
+                            echo "Pushing frontend image..."
+                            docker push ${FRONTEND_IMAGE}:${BUILD_TAG}
+                            docker push ${FRONTEND_IMAGE}:${ENVIRONMENT}-latest
+                            
+                            docker logout
+                        '''
+                    }
                 }
             }
         }
@@ -140,22 +152,40 @@ pipeline {
                         # Copy environment file
                         cp .env.example .env.${ENVIRONMENT}
                         
-                        # Update image tags in compose file
-                        sed -i "s|image: rentalcar-backend|image: ${BACKEND_IMAGE}:${ENVIRONMENT}-latest|g" docker-compose.yml
-                        sed -i "s|image: rentalcar-frontend|image: ${FRONTEND_IMAGE}:${ENVIRONMENT}-latest|g" docker-compose.yml
+                        # Update image tags in compose file for Docker Hub
+                        sed -i "s|build:.*|image: ${BACKEND_IMAGE}:${ENVIRONMENT}-latest|g" docker-compose.yml || sed -i "s|build:|image: ${BACKEND_IMAGE}:${ENVIRONMENT}-latest|g" docker-compose.yml
+                        
+                        # Or use proper YAML-aware replacement
+                        cat > docker-compose.override.yml << EOF
+version: '3.9'
+services:
+  backend:
+    image: ${BACKEND_IMAGE}:${ENVIRONMENT}-latest
+  frontend:
+    image: ${FRONTEND_IMAGE}:${ENVIRONMENT}-latest
+EOF
                         
                         # Stop existing containers
-                        docker-compose -f ${DOCKER_COMPOSE_FILE} down || true
+                        docker-compose down || true
+                        
+                        # Login to Docker Hub
+                        echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin || true
+                        
+                        # Pull images
+                        docker pull ${BACKEND_IMAGE}:${ENVIRONMENT}-latest || true
+                        docker pull ${FRONTEND_IMAGE}:${ENVIRONMENT}-latest || true
                         
                         # Start services
-                        docker-compose -f ${DOCKER_COMPOSE_FILE} --env-file .env.${ENVIRONMENT} up -d
+                        docker-compose -f ${DOCKER_COMPOSE_FILE} -f docker-compose.override.yml --env-file .env.${ENVIRONMENT} up -d
                         
                         # Wait for services to be healthy
                         echo "Waiting for services to be healthy..."
                         sleep 30
                         
                         # Check service status
-                        docker-compose -f ${DOCKER_COMPOSE_FILE} ps
+                        docker-compose -f ${DOCKER_COMPOSE_FILE} -f docker-compose.override.yml ps
+                        
+                        docker logout
                     '''
                 }
             }
